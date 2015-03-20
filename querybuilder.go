@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	DefaultPageSize uint = 2 // DefaultPageSize defines how many elements a page contains per default.
+	DefaultPageSize uint = 20 // DefaultPageSize defines how many elements a page contains per default.
 )
 
 // Page the paging information.
