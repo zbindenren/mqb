@@ -58,7 +58,7 @@ func NewMongoQuery(endPointStruct interface{}, database *mgo.Database) *MongoQue
 //     mq := NewMongoQuery(People{}, db)
 //     q, _ := mq.CreateQuery(req) // creates a query from the request for the people collection
 //
-//	   mq.DisableParameters("name", "sort")
+//     mq.DisableParameters("name", "sort")
 //     q, _ := mq.CreateQuery(req) // creates a query from the request for the people collection with the parameters "name" and "sort" disabled.
 //
 func (mq *MongoQuery) CreateQuery(req *http.Request) (*mgo.Query, error) {
