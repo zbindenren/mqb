@@ -112,6 +112,22 @@ func TestCreateQueryFilter(t *testing.T) {
 	}
 }
 
+func TestQueryFilterWithMultipleIdenticalParamaters(t *testing.T) {
+	mq := NewMongoQuery(TestStruct{}, &mgo.Database{})
+	req, _ := http.NewRequest("GET", "/?intMember=1&intMember=2&intMember=3", bytes.NewBufferString(""))
+	q, err := mq.createQueryFilter(req)
+	if err != nil {
+		t.Errorf("error occured: %s", err)
+	}
+	if !reflect.DeepEqual(q, map[string]interface{}{
+		"intMember": map[string]interface{}{
+			"$in": []interface{}{1, 2, 3},
+		},
+	}) {
+		t.Errorf("wrong filter map generated generated: %v", q)
+	}
+}
+
 func TestCreateSortFields(t *testing.T) {
 	mq := NewMongoQuery(TestStruct{}, &mgo.Database{})
 	req, _ := http.NewRequest("GET", "/?sort=mybool&sort=-intMember&sort=-floatmember&sort=stringmember", bytes.NewBufferString(""))

@@ -27,7 +27,7 @@ type Page struct {
 
 // Response contains the result of the query, including the Page information.
 type Response struct {
-	Content interface{} `json:"content"`
+	Content interface{} `json:"content,omitempty"`
 	Page    Page        `json:"page"`
 }
 
@@ -149,7 +149,8 @@ func (mq *MongoQuery) AddOrOverwriteValidParameter(name string, value reflect.Ki
 func (mq *MongoQuery) createQueryFilter(req *http.Request) (map[string]interface{}, error) {
 	filter := make(map[string]interface{})
 
-	for parameterName, parameterValue := range req.URL.Query() {
+	for parameterName, parameterValues := range req.URL.Query() {
+		s := []interface{}{}
 		if kind, ok := mq.supportedParameters[parameterName]; ok {
 			// meta parameters are not filters
 			if _, ok := validMetaParameters[parameterName]; ok {
@@ -157,36 +158,57 @@ func (mq *MongoQuery) createQueryFilter(req *http.Request) (map[string]interface
 			}
 			switch kind {
 			case reflect.Bool:
-				b, err := strconv.ParseBool(parameterValue[0])
-				if err != nil {
-					return nil, err
+				for _, v := range parameterValues {
+					b, err := strconv.ParseBool(v)
+					if err != nil {
+						return nil, err
+					}
+					s = append(s, b)
 				}
-				filter[parameterName] = b
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				i, err := strconv.Atoi(parameterValue[0])
-				if err != nil {
-					return nil, err
+				for _, v := range parameterValues {
+					i, err := strconv.Atoi(v)
+					if err != nil {
+						return nil, err
+					}
+					s = append(s, i)
 				}
-				filter[parameterName] = i
 			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-				i, err := strconv.ParseUint(parameterValue[0], 10, 0)
-				if err != nil {
-					return nil, err
+				for _, v := range parameterValues {
+					i, err := strconv.ParseUint(v, 10, 0)
+					if err != nil {
+						return nil, err
+					}
+					s = append(s, uint(i))
 				}
-				filter[parameterName] = i
 			case reflect.Float32, reflect.Float64:
-				f, err := strconv.ParseFloat(parameterValue[0], 64)
-				if err != nil {
-					return nil, err
+				for _, v := range parameterValues {
+					f, err := strconv.ParseFloat(v, 64)
+					if err != nil {
+						return nil, err
+					}
+					s = append(s, f)
 				}
-				filter[parameterName] = f
 			case reflect.String:
-				filter[parameterName] = bson.RegEx{Pattern: parameterValue[0], Options: ""}
+				if len(parameterValues) == 1 {
+					s = []interface{}{bson.RegEx{Pattern: parameterValues[0], Options: ""}}
+				} else {
+					for _, v := range parameterValues {
+						s = append(s, v)
+					}
+				}
 			default:
 				return nil, fmt.Errorf("reflection kind '%s' is not supported", kind)
 			}
 		} else {
 			return nil, fmt.Errorf("parameter '%s' is not supported", parameterName)
+		}
+		if len(s) == 1 {
+			filter[parameterName] = s[0]
+		} else {
+			filter[parameterName] = map[string]interface{}{
+				"$in": s,
+			}
 		}
 	}
 	return filter, nil
