@@ -59,7 +59,7 @@ func TestCreateDisableAndAddParameters(t *testing.T) {
 
 func TestCreateFieldsMap(t *testing.T) {
 	mq := NewMongoQuery(TestStruct{}, &mgo.Database{})
-	req, _ := http.NewRequest("GET", "/?field=mybool&field=floatmember", bytes.NewBufferString(""))
+	req, _ := http.NewRequest("GET", "/?field=mybool&field=floatmember&field=embeddedint", bytes.NewBufferString(""))
 	p, err := mq.createFieldsMap(req)
 	if err != nil {
 		t.Errorf("error occured: %s", err)
@@ -67,6 +67,7 @@ func TestCreateFieldsMap(t *testing.T) {
 	if !reflect.DeepEqual(p, map[string]interface{}{
 		"mybool":      1,
 		"floatmember": 1,
+		"embeddedint": 1,
 	}) {
 		t.Errorf("wrong pluck map generated: %v", p)
 	}

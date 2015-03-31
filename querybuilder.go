@@ -66,10 +66,17 @@ func (mq *MongoQuery) CreateQuery(req *http.Request) (*mgo.Query, error) {
 	if err != nil {
 		return nil, err
 	}
+	q := mq.dataBase.C(structName(mq.endPointStruct)).Find(filterMap)
+
+	selectFields, err := mq.createFieldsMap(req)
+	q.Select(selectFields)
+
 	sortFields, err := mq.createSortFields(req)
 	if err != nil {
 		return nil, err
 	}
+	q.Sort(sortFields...)
+
 	mq.page.Size, err = getUint(req, "limit", DefaultPageSize)
 	if err != nil {
 		return nil, err
@@ -81,8 +88,6 @@ func (mq *MongoQuery) CreateQuery(req *http.Request) (*mgo.Query, error) {
 	if mq.page.Current == 0 {
 		return nil, errors.New("page cannot be 0")
 	}
-	q := mq.dataBase.C(structName(mq.endPointStruct)).Find(filterMap)
-	q.Sort(sortFields...)
 	q = q.Limit(int(mq.page.Size))
 	q = q.Skip(int((mq.page.Current - 1) * mq.page.Size))
 	return q, nil
