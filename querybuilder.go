@@ -191,10 +191,18 @@ func (mq *MongoQuery) createQueryFilter(req *http.Request) (map[string]interface
 				}
 			case reflect.String:
 				if len(parameterValues) == 1 {
-					s = []interface{}{bson.RegEx{Pattern: parameterValues[0], Options: ""}}
+					if bson.IsObjectIdHex(parameterValues[0]) {
+						s = []interface{}{bson.ObjectIdHex(parameterValues[0])}
+					} else {
+						s = []interface{}{bson.RegEx{Pattern: parameterValues[0], Options: ""}}
+					}
 				} else {
 					for _, v := range parameterValues {
-						s = append(s, v)
+						if bson.IsObjectIdHex(v) {
+							s = append(s, bson.ObjectIdHex(v))
+						} else {
+							s = append(s, v)
+						}
 					}
 				}
 			default:

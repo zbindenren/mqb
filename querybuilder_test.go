@@ -128,6 +128,24 @@ func TestQueryFilterWithMultipleIdenticalParamaters(t *testing.T) {
 	}
 }
 
+func TestFilterWithObjectIdString(t *testing.T) {
+	mq := NewMongoQuery(TestStruct{}, &mgo.Database{})
+	objID := "54e1b216a8f830ee6dead911"
+	req, _ := http.NewRequest("GET", "/?stringmember="+objID, bytes.NewBufferString(""))
+	if !bson.IsObjectIdHex(objID) {
+		t.Fatalf("objectid %s is not an objectid", objID)
+	}
+	q, err := mq.createQueryFilter(req)
+	if err != nil {
+		t.Errorf("error occured: %s", err)
+	}
+	if !reflect.DeepEqual(q, map[string]interface{}{
+		"stringmember": bson.ObjectIdHex(objID),
+	}) {
+		t.Errorf("wrong filter map generated generated: %v", q)
+	}
+}
+
 func TestCreateSortFields(t *testing.T) {
 	mq := NewMongoQuery(TestStruct{}, &mgo.Database{})
 	req, _ := http.NewRequest("GET", "/?sort=mybool&sort=-intMember&sort=-floatmember&sort=stringmember", bytes.NewBufferString(""))
