@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ansel1/merry"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -79,14 +80,14 @@ func (mq *MongoQuery) CreateQuery(req *http.Request) (*mgo.Query, error) {
 
 	mq.page.Size, err = getUint(req, "limit", DefaultPageSize)
 	if err != nil {
-		return nil, err
+		return nil, merry.Wrap(err).WithHTTPCode(http.StatusBadRequest)
 	}
 	mq.page.Current, err = getUint(req, "page", 1)
 	if err != nil {
-		return nil, err
+		return nil, merry.Wrap(err).WithHTTPCode(http.StatusBadRequest)
 	}
 	if mq.page.Current == 0 {
-		return nil, errors.New("page cannot be 0")
+		return nil, merry.Wrap(errors.New("page cannot be 0")).WithHTTPCode(http.StatusBadRequest)
 	}
 	q = q.Limit(int(mq.page.Size))
 	q = q.Skip(int((mq.page.Current - 1) * mq.page.Size))
@@ -108,7 +109,7 @@ func (mq *MongoQuery) Run(req *http.Request) (*Response, error) {
 	countQuery.Skip(0)
 	items, err := countQuery.Count()
 	if err != nil {
-		return nil, err
+		return nil, merry.Wrap(err).WithHTTPCode(http.StatusBadRequest)
 	}
 
 	response := &Response{
@@ -123,7 +124,7 @@ func (mq *MongoQuery) Run(req *http.Request) (*Response, error) {
 	content := reflect.New(slice.Type()).Interface()
 	err = q.All(content)
 	if err != nil {
-		return nil, err
+		return nil, merry.Wrap(err).WithHTTPCode(http.StatusInternalServerError)
 	}
 	response.Content = content
 	return response, nil
@@ -166,7 +167,7 @@ func (mq *MongoQuery) createQueryFilter(req *http.Request) (map[string]interface
 				for _, v := range parameterValues {
 					b, err := strconv.ParseBool(v)
 					if err != nil {
-						return nil, err
+						return nil, merry.Wrap(err).WithHTTPCode(http.StatusBadRequest)
 					}
 					s = append(s, b)
 				}
@@ -174,7 +175,7 @@ func (mq *MongoQuery) createQueryFilter(req *http.Request) (map[string]interface
 				for _, v := range parameterValues {
 					i, err := strconv.Atoi(v)
 					if err != nil {
-						return nil, err
+						return nil, merry.Wrap(err).WithHTTPCode(http.StatusBadRequest)
 					}
 					s = append(s, i)
 				}
@@ -182,7 +183,7 @@ func (mq *MongoQuery) createQueryFilter(req *http.Request) (map[string]interface
 				for _, v := range parameterValues {
 					i, err := strconv.ParseUint(v, 10, 0)
 					if err != nil {
-						return nil, err
+						return nil, merry.Wrap(err).WithHTTPCode(http.StatusBadRequest)
 					}
 					s = append(s, uint(i))
 				}
@@ -190,7 +191,7 @@ func (mq *MongoQuery) createQueryFilter(req *http.Request) (map[string]interface
 				for _, v := range parameterValues {
 					f, err := strconv.ParseFloat(v, 64)
 					if err != nil {
-						return nil, err
+						return nil, merry.Wrap(err).WithHTTPCode(http.StatusBadRequest)
 					}
 					s = append(s, f)
 				}
@@ -211,10 +212,10 @@ func (mq *MongoQuery) createQueryFilter(req *http.Request) (map[string]interface
 					}
 				}
 			default:
-				return nil, fmt.Errorf("reflection kind '%s' is not supported", kind)
+				return nil, merry.Wrap(fmt.Errorf("reflection kind '%s' is not supported", kind)).WithHTTPCode(http.StatusBadRequest)
 			}
 		} else {
-			return nil, fmt.Errorf("parameter '%s' is not supported", parameterName)
+			return nil, merry.Wrap(fmt.Errorf("parameter '%s' is not supported", parameterName)).WithHTTPCode(http.StatusBadRequest)
 		}
 		if len(s) == 1 {
 			filter[parameterName] = s[0]
@@ -245,7 +246,7 @@ func (mq *MongoQuery) createSortFields(req *http.Request) ([]string, error) {
 	if _sortField, ok := req.URL.Query()["sort"]; ok {
 		for _, v := range _sortField {
 			if _, ok := mq.supportedParameters[strings.Trim(v, "-")]; !ok {
-				return nil, fmt.Errorf("unsupported field value: %s", v)
+				return nil, merry.Wrap(fmt.Errorf("unsupported field value: %s", v)).WithHTTPCode(http.StatusBadRequest)
 			}
 			sortFields = append(sortFields, v)
 		}
