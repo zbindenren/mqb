@@ -109,7 +109,7 @@ func (mq *MongoQuery) Run(req *http.Request) (*Response, error) {
 	countQuery.Skip(0)
 	items, err := countQuery.Count()
 	if err != nil {
-		return nil, merry.Wrap(err).WithHTTPCode(http.StatusBadRequest)
+		return nil, merry.Wrap(err).WithHTTPCode(http.StatusInternalServerError)
 	}
 
 	response := &Response{
