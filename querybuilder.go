@@ -109,7 +109,7 @@ func (mq *MongoQuery) Run(req *http.Request) (*Response, error) {
 	countQuery.Skip(0)
 	items, err := countQuery.Count()
 	if err != nil {
-		return nil, merry.Wrap(err).WithHTTPCode(http.StatusInternalServerError)
+		return nil, merry.New("could not create count query").Append(err.Error()).WithHTTPCode(http.StatusInternalServerError)
 	}
 
 	response := &Response{
@@ -124,7 +124,7 @@ func (mq *MongoQuery) Run(req *http.Request) (*Response, error) {
 	content := reflect.New(slice.Type()).Interface()
 	err = q.All(content)
 	if err != nil {
-		return nil, merry.Wrap(err).WithHTTPCode(http.StatusInternalServerError)
+		return nil, merry.New("could not execute q.All()").Append(err.Error()).WithHTTPCode(http.StatusInternalServerError)
 	}
 	response.Content = content
 	return response, nil
