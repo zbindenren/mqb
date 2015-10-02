@@ -59,9 +59,12 @@ func TestGetMemberNameFromTag(t *testing.T) {
 func TestGetUInt(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/?limit=11&page=11", bytes.NewBufferString(""))
 	for _, param := range []string{"limit", "page"} {
-		v, err := getUint(req, param, 0)
+		v, ok, err := getUint(req, param)
 		if err != nil {
-			t.Errorf("error occured: %s", err)
+			t.Fatalf("error occured: %s, but should not", err)
+		}
+		if !ok {
+			t.Error("ok value should be true")
 		}
 		if v != 11 {
 			t.Errorf("value is %d, but should be 10", v)
@@ -69,11 +72,11 @@ func TestGetUInt(t *testing.T) {
 	}
 
 	req, _ = http.NewRequest("GET", "/?foo=10", bytes.NewBufferString(""))
-	v, err := getUint(req, "bar", 0)
+	_, ok, err := getUint(req, "bar")
 	if err != nil {
-		t.Errorf("error occured: %s", err)
+		t.Fatalf("error occured: %s", err)
 	}
-	if v != 0 {
-		t.Errorf("value is %d, but should be 0", v)
+	if ok {
+		t.Error("ok value should be false")
 	}
 }

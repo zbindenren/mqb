@@ -50,6 +50,7 @@ func NewMongoQuery(endPointStruct interface{}, database *mgo.Database) *MongoQue
 		disabledParameters:           []string{},
 		additionalSupportedParamters: make(map[string]reflect.Kind),
 		endPointStruct:               endPointStruct,
+		page:                         Page{Size: DefaultPageSize, Current: 1},
 	}
 }
 
@@ -78,18 +79,26 @@ func (mq *MongoQuery) CreateQuery(req *http.Request) (*mgo.Query, error) {
 	}
 	q.Sort(sortFields...)
 
-	mq.page.Size, err = getUint(req, "limit", DefaultPageSize)
+	size, ok, err := getUint(req, "limit")
 	if err != nil {
 		return nil, merry.Wrap(err).WithHTTPCode(http.StatusBadRequest)
 	}
-	mq.page.Current, err = getUint(req, "page", 1)
+	if ok {
+		mq.page.Size = size
+	}
+	current, ok, err := getUint(req, "page")
 	if err != nil {
 		return nil, merry.Wrap(err).WithHTTPCode(http.StatusBadRequest)
+	}
+	if ok {
+		mq.page.Current = current
 	}
 	if mq.page.Current == 0 {
 		return nil, merry.Wrap(errors.New("page cannot be 0")).WithHTTPCode(http.StatusBadRequest)
 	}
-	q = q.Limit(int(mq.page.Size))
+	if mq.page.Size > 0 {
+		q = q.Limit(int(mq.page.Size))
+	}
 	q = q.Skip(int((mq.page.Current - 1) * mq.page.Size))
 	return q, nil
 }

@@ -90,16 +90,14 @@ func getFieldNameFromTag(tag reflect.StructTag) string {
 }
 
 // getUint tries to convert the value of param to an uint and an error
-// is returned if it fails. If param is not present in the request a
-// dflt value is returned.
-func getUint(req *http.Request, param string, dflt uint) (uint, error) {
-	var err error
-	uintVal := uint64(dflt)
+// is returned if it fails. If param is not present the bool value is false
+func getUint(req *http.Request, param string) (uint, bool, error) {
 	if _uintVal, ok := req.URL.Query()[param]; ok {
-		uintVal, err = strconv.ParseUint(_uintVal[0], 10, 0)
+		uintVal, err := strconv.ParseUint(_uintVal[0], 10, 0)
 		if err != nil {
-			return 0, fmt.Errorf("invalid value for %s", _uintVal[0])
+			return 0, true, fmt.Errorf("invalid value for %s", _uintVal[0])
 		}
+		return uint(uintVal), true, nil
 	}
-	return uint(uintVal), err
+	return 0, false, nil
 }
