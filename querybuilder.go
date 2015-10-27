@@ -71,6 +71,9 @@ func (mq *MongoQuery) CreateQuery(req *http.Request) (*mgo.Query, error) {
 	q := mq.dataBase.C(structName(mq.endPointStruct)).Find(filterMap)
 
 	selectFields, err := mq.createFieldsMap(req)
+	if err != nil {
+		return nil, err
+	}
 	q.Select(selectFields)
 
 	sortFields, err := mq.createSortFields(req)
@@ -238,11 +241,13 @@ func (mq *MongoQuery) createQueryFilter(req *http.Request) (map[string]interface
 }
 
 func (mq *MongoQuery) createFieldsMap(req *http.Request) (map[string]interface{}, error) {
+	fmt.Println("fieldsmap")
+	fmt.Println(mq.supportedParameters)
 	fields := make(map[string]interface{})
 	if _field, ok := req.URL.Query()["field"]; ok {
 		for _, v := range _field {
-			if _, ok := mq.supportedParameters[v]; !ok {
-				return nil, fmt.Errorf("unsupported field value: %s", v)
+			if _, ok2 := mq.supportedParameters[v]; !ok2 {
+				return nil, merry.Wrap(fmt.Errorf("unsupported field value: %s", v)).WithHTTPCode(http.StatusBadRequest)
 			}
 			fields[v] = 1
 		}
@@ -251,6 +256,8 @@ func (mq *MongoQuery) createFieldsMap(req *http.Request) (map[string]interface{}
 }
 
 func (mq *MongoQuery) createSortFields(req *http.Request) ([]string, error) {
+	fmt.Println("sortfields")
+	fmt.Println(mq.supportedParameters)
 	sortFields := []string{}
 	if _sortField, ok := req.URL.Query()["sort"]; ok {
 		for _, v := range _sortField {

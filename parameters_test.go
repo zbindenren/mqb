@@ -2,9 +2,11 @@ package mqb
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestCreateValidParametersMap(t *testing.T) {
@@ -79,4 +81,10 @@ func TestGetUInt(t *testing.T) {
 	if ok {
 		t.Error("ok value should be false")
 	}
+}
+
+func TestRene(t *testing.T) {
+	time := time.Now()
+	typ := reflect.TypeOf(time)
+	fmt.Println(typ)
 }
