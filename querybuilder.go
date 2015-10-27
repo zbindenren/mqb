@@ -138,7 +138,13 @@ func (mq *MongoQuery) Run(req *http.Request) (*Response, error) {
 	if err != nil {
 		return nil, merry.New("could not execute q.All()").Append(err.Error()).WithHTTPCode(http.StatusInternalServerError)
 	}
-	response.Content = content
+	// to prevent the content being null
+	s := reflect.ValueOf(content)
+	if s.Elem().Len() > 0 {
+		response.Content = content
+	} else {
+		response.Content = []interface{}{}
+	}
 	return response, nil
 }
 
