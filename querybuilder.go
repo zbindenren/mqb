@@ -241,8 +241,6 @@ func (mq *MongoQuery) createQueryFilter(req *http.Request) (map[string]interface
 }
 
 func (mq *MongoQuery) createFieldsMap(req *http.Request) (map[string]interface{}, error) {
-	fmt.Println("fieldsmap")
-	fmt.Println(mq.supportedParameters)
 	fields := make(map[string]interface{})
 	if _field, ok := req.URL.Query()["field"]; ok {
 		for _, v := range _field {
@@ -256,8 +254,6 @@ func (mq *MongoQuery) createFieldsMap(req *http.Request) (map[string]interface{}
 }
 
 func (mq *MongoQuery) createSortFields(req *http.Request) ([]string, error) {
-	fmt.Println("sortfields")
-	fmt.Println(mq.supportedParameters)
 	sortFields := []string{}
 	if _sortField, ok := req.URL.Query()["sort"]; ok {
 		for _, v := range _sortField {

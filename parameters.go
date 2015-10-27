@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var validMetaParameters = map[string]reflect.Kind{
@@ -43,6 +44,10 @@ func createValidParametersMap(endPointStruct interface{}, disabledParameters ...
 			fieldName = strings.ToLower(field.Name)
 		}
 		if field.Type.Kind() == reflect.Struct {
+			if field.Type == reflect.TypeOf(time.Time{}) && !contains(disabledParameters, fieldName) {
+				validParametersMap[fieldName] = field.Type.Kind()
+				continue
+			}
 			for k, v := range createValidParametersMap(val.Field(i).Interface(), disabledParameters...) {
 				validParametersMap[k] = v
 			}

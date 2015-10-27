@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"reflect"
 	"testing"
+	"time"
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -25,6 +26,7 @@ type TestStruct struct {
 	EmbeddedMember    Embedded
 	StringSliceMember []string `bson:"strSliceMember"`
 	IntSliceMember    []int
+	TimeMember        time.Time
 }
 
 func TestCreateDisableAndAddParameters(t *testing.T) {
@@ -149,12 +151,12 @@ func TestFilterWithObjectIdString(t *testing.T) {
 
 func TestCreateSortFields(t *testing.T) {
 	mq := NewMongoQuery(TestStruct{}, &mgo.Database{})
-	req, _ := http.NewRequest("GET", "/?sort=mybool&sort=-intMember&sort=-floatmember&sort=stringmember", bytes.NewBufferString(""))
+	req, _ := http.NewRequest("GET", "/?sort=mybool&sort=-intMember&sort=-floatmember&sort=stringmember&sort=timemember", bytes.NewBufferString(""))
 	s, err := mq.createSortFields(req)
 	if err != nil {
 		t.Errorf("error occured: %s", err)
 	}
-	if !reflect.DeepEqual(s, []string{"mybool", "-intMember", "-floatmember", "stringmember"}) {
+	if !reflect.DeepEqual(s, []string{"mybool", "-intMember", "-floatmember", "stringmember", "timemember"}) {
 		t.Errorf("wrong sort fields generated: %v", s)
 	}
 }
